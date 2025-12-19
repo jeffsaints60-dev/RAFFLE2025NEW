@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANZON STORE-SMARTPHONE RAFFLE GIVEAWAY 2025</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  margin:0;
+  background:#f0fdf4;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+}
+h1{font-size:18px;text-align:center;margin-bottom:10px}
+canvas{border:6px solid #14532d;border-radius:50%}
+button{
+  margin-top:10px;
+  padding:10px 18px;
+  border:none;
+  border-radius:10px;
+  background:#16a34a;
+  color:#fff;
+  font-size:16px;
+}
+#winnerPopup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+#winnerBox{
+  background:#fff;
+  padding:25px;
+  border-radius:16px;
+  text-align:center;
+  box-shadow:0 0 25px rgba(0,0,0,.4);
+}
+#winnerBox h2{margin:0;font-size:26px;color:#16a34a}
+.confetti{
+  position:fixed;
+  width:8px;
+  height:8px;
+  top:-10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>MANZON STORE-SMARTPHONE RAFFLE GIVEAWAY 2025</h1>
+
+<canvas id="wheel" width="380" height="380"></canvas>
+<button id="spinBtn">SPIN</button>
+
+<div id="winnerPopup">
+  <div id="winnerBox">
+    <h2 id="winnerName"></h2>
+  </div>
+</div>
+
+<audio id="spinSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_36c2a6a7e6.mp3"></audio>
+<audio id="winSound" src="https://cdn.pixabay.com/audio/2022/10/18/audio_9d0fa1b1d1.mp3"></audio>
+
+<script>
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+const options = [
+ "Ate Budda and Marvin","April and Na Fely","Bulak Fam","Ate Shy","Belen Fam","Te Udet",
+ "Tiyo Ising","Manzon Fam","Nay Fe and Geke Elizer","Lontoc Fam","Richard Fam",
+ "Aping Icel Fam","Tiya Ela","Adilo","Buree","Botts","Kayot and Make","Tito Boy","Te Fe",
+ "Te Icel and Toto","Ta Egay and Paul","Mael Almarez","Jonathan Doria Fam","Ortega Fam"
+];
+
+const REAL_WINNER = "Tiyo Ising";
+
+let angle = 0;
+let spinCount = 0;
+let spinning = false;
+
+const slice = 2 * Math.PI / options.length;
+const center = canvas.width / 2;
+
+function drawWheel(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  options.forEach((name,i)=>{
+    const start = angle + i * slice;
+    ctx.beginPath();
+    ctx.moveTo(center,center);
+    ctx.arc(center,center,center,start,start+slice);
+    ctx.fillStyle = `hsl(${i*360/options.length},70%,50%)`;
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(center,center);
+    ctx.rotate(start + slice/2);
+    ctx.textAlign="right";
+    ctx.fillStyle="#fff";
+    ctx.font="bold 13px Arial";
+    ctx.fillText(name,center-10,5);
+    ctx.restore();
+  });
+
+  // pointer
+  ctx.fillStyle="red";
+  ctx.beginPath();
+  ctx.moveTo(center,0);
+  ctx.lineTo(center-12,22);
+  ctx.lineTo(center+12,22);
+  ctx.fill();
+}
+drawWheel();
+
+function confetti(){
+  for(let i=0;i<120;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*innerWidth+"px";
+    c.style.background=`hsl(${Math.random()*360},80%,60%)`;
+    document.body.appendChild(c);
+    let y=0;
+    const fall=()=>{
+      y+=3;
+      c.style.top=y+"px";
+      if(y<innerHeight)requestAnimationFrame(fall);
+      else c.remove();
+    };
+    fall();
+  }
+}
+
+document.getElementById("spinBtn").onclick=()=>{
+  if(spinning) return;
+  spinning=true;
+  spinCount++;
+
+  const spinSound=document.getElementById("spinSound");
+  const winSound=document.getElementById("winSound");
+  spinSound.currentTime=0;
+  spinSound.play();
+
+  let winnerIndex;
+
+  if(spinCount < 3){
+    do{
+      winnerIndex = Math.floor(Math.random()*options.length);
+    }while(options[winnerIndex] === REAL_WINNER);
+  }else{
+    winnerIndex = options.indexOf(REAL_WINNER);
+  }
+
+  const target =
+    (3*Math.PI/2) - (winnerIndex*slice + slice/2);
+
+  const totalRotation = 10*2*Math.PI + target;
+  const duration = 6500;
+  const start = performance.now();
+
+  function animate(t){
+    const p = Math.min((t-start)/duration,1);
+    const ease = 1-Math.pow(1-p,3);
+    angle = ease * totalRotation;
+    drawWheel();
+
+    if(p<1){
+      requestAnimationFrame(animate);
+    }else{
+      spinning=false;
+      spinSound.pause();
+      document.getElementById("winnerName").textContent = options[winnerIndex];
+      document.getElementById("winnerPopup").style.display="flex";
+
+      if(spinCount===3){
+        winSound.play();
+        confetti();
+      }
+    }
+  }
+  requestAnimationFrame(animate);
+};
+
+document.getElementById("winnerPopup").onclick=()=>{
+  document.getElementById("winnerPopup").style.display="none";
+};
+</script>
+</body>
+</html>
